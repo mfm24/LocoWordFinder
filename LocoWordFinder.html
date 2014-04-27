@@ -29,24 +29,54 @@ table table, table table td
 </style>
 </head>
 <body>
-<script src="anagram_keyless.js"></script>
 <script>
-v={}
-//we convert the array of string arrays into a dictionary of string arrays
-//with the key being a sorted list of chars in each string
-// so using an array as a key doesn't seem any slower/faster.
-// so non-keyless (first version) loaded a file like:
-// v={...,'ails':['sail', 'ails', 'sial'],...}
-//whereas the new one loads
-// vk=[...,['sail', 'ails', 'sial'],...]
-//and converts into 
-// v = {..., ['a','i','l','s']:['sail', 'ails', 'sial'],...}
-//which makes sense, as we use character lists internally so we can insert and remove
-//elements. So the conversion from vk to v takes ~4s, and once done we get the same result
-//without having to switch between char arrays and strings. Doesn't seem to affect performance though
-//(I thought it might have been quicker...)
-for (k in vk) { v[vk[k][0].split("").sort()] = vk[k]}
+var loaded_dict = false
+var storage_key = "word_dictionary"
+var js_path = "https://dl.dropbox.com/u/694901/blog/LocoWordFinder/anagram_keyless.js"
 
+if(typeof(Storage)!=="undefined")
+{
+	// look to see if we have v in local storage
+	v=localStorage.getItem(storage_key)
+	if (v!=null)
+	{
+		v = JSON.parse(v)
+		loaded_dict = true
+	}
+}
+
+if (! loaded_dict)
+{
+	//we load the anagram keyless dynamically:
+	var head = document.getElementsByTagName('head')[0];
+	var script = document.createElement('script');
+	script.type = 'text/javascript';
+	script.src = js_path;
+	script.onload= function() {
+		// hopefully this loads it
+		v={}
+		//we convert the array of string arrays into a dictionary of string arrays
+		//with the key being a sorted list of chars in each string
+		// so using an array as a key doesn't seem any slower/faster.
+		// so non-keyless (first version) loaded a file like:
+		// v={...,'ails':['sail', 'ails', 'sial'],...}
+		//whereas the new one loads
+		// vk=[...,['sail', 'ails', 'sial'],...]
+		//and converts into 
+		// v = {..., ['a','i','l','s']:['sail', 'ails', 'sial'],...}
+		//which makes sense, as we use character lists internally so we can insert and remove
+		//elements. So the conversion from vk to v takes ~4s, and once done we get the same result
+		//without having to switch between char arrays and strings. Doesn't seem to affect performance though
+		//(I thought it might have been quicker...)
+		for (var k in vk) { v[vk[k][0].split("").sort()] = vk[k]}
+		if(typeof(Storage)!=="undefined")
+		{
+			// look to see if we have v in local storage
+			localStorage.setItem(storage_key, JSON.stringify(v))
+		}
+	}
+	head.appendChild(script);
+}
 
 function recuranagram(s)
 {
